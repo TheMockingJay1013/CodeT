@@ -33,7 +33,7 @@ class PromptBuilder:
         content_lines = content['context'].splitlines()
         content_lines_comment = [f'# {line}' for line in content_lines]
         # aggregate the comment and the code lines
-        
+
         block_str = '\n'.join([f_path_comment, f_paths_str, self.seperator] + content_lines_comment + [self.seperator]) + '\n'
         tokenized_block = self.tokenizer.tokenize(block_str)
         token_len = len(tokenized_block)
@@ -75,7 +75,7 @@ class PromptBuilder:
                 break
             block_str, token_len = make_block_func(retrieved_context)
             if current_token_length + token_len < self.max_retrieval_length:
-                prepend_blocks.insert(0, block_str) 
+                prepend_blocks.insert(0, block_str)
                 current_token_length += token_len
                 chosen_context.append(retrieved_context)
             else:
@@ -120,8 +120,8 @@ class BuildPromptWrapper:
             self.vector_path_builder = FilePathBuilder.ada002_vector_path
         self.max_top_k = 20
         self.repos = repos
-        self.window_size = window_size
-        self.slice_size = slice_size
+        self.window_size = window_size[0]
+        self.slice_size = slice_size[0]
         if benchmark == CONSTANTS.line_benchmark:
             self.task_path = FilePathBuilder.random_line_completion_benchmark
         elif benchmark == CONSTANTS.api_benchmark:
@@ -132,7 +132,7 @@ class BuildPromptWrapper:
             self.task_path = FilePathBuilder.short_random_line_completion_benchmark
         self.benchmark = benchmark
         self.tokenizer = tokenizer
-    
+
     def _run(self, mode, query_window_path_builder, output_file_path):
         workers = []
         for repo in self.repos:
@@ -141,7 +141,7 @@ class BuildPromptWrapper:
             repo_window_path = FilePathBuilder.repo_windows_path(repo, self.window_size, self.slice_size)
             repo_embedding_path = self.vector_path_builder(repo_window_path)
             retrieval_results = FilePathBuilder.retrieval_results_path(query_line_path, repo_embedding_path, self.max_top_k)
-            
+
             query_lines_with_retrieval_results = Tools.load_pickle(retrieval_results)
             log_message = f'repo: {repo}, window: {self.window_size}, slice: {self.slice_size}'
             worker = PromptBuilder(query_lines_with_retrieval_results, self.task_path, log_message, self.tokenizer)
@@ -155,8 +155,7 @@ class BuildPromptWrapper:
         query_line_path_temp = functools.partial(FilePathBuilder.search_first_window_path, self.benchmark, mode)
         self._run(mode, query_line_path_temp, output_path)
 
-    
+
     def build_prediction_prompt(self, mode, prediction_path, output_path):
         query_line_path_temp = functools.partial(FilePathBuilder.gen_first_window_path, self.benchmark, mode, prediction_path)
         self._run(mode, query_line_path_temp, output_path)
-
