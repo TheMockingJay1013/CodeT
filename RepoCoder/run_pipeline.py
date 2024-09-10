@@ -12,13 +12,13 @@ from build_prompt import BuildPromptWrapper
 from utils import CONSTANTS, CodexTokenizer
 
 def make_repo_window(repos, window_sizes, slice_sizes):
-    worker = MakeWindowWrapper(None, repos, window_sizes, slice_sizes)
-    worker.window_for_repo_files()
+    MakeWindowWrapper(None, repos, window_sizes, slice_sizes).window_for_repo_files()
+    vectorizer = BagOfWords
+    BuildVectorWrapper(None, vectorizer, repos, window_sizes, slice_sizes).vectorize_repo_windows()
 
 
 def run_RG1_and_oracle_method(benchmark, repos, window_sizes, slice_sizes):
-    # build code snippets for all the repositories
-    make_repo_window(repos, window_sizes, slice_sizes)
+
     # build code snippets for vanilla retrieval-augmented approach and ground truth
     MakeWindowWrapper(benchmark, repos, window_sizes, slice_sizes).window_for_baseline_and_ground()
     # build vector for vanilla retrieval-augmented approach and ground truth
@@ -62,9 +62,12 @@ if __name__ == '__main__':
     window_sizes = [20]
     slice_sizes = [2]  # 20 / 2 = 10
 
+    # build window for the repos
+    make_repo_window(repos, window_sizes, slice_sizes)
+
     # build prompt for the RG1 and oracle methods
     run_RG1_and_oracle_method(CONSTANTS.api_benchmark, repos, window_sizes, slice_sizes)
 
     # build prompt for the RepoCoder method
-    prediction_path = 'predictions/rg-one-gram-ws-20-ss-2_samples.0.jsonl'
-    run_RepoCoder_method(CONSTANTS.api_benchmark, repos, window_sizes, slice_sizes, prediction_path)
+    # prediction_path = 'predictions/rg-one-gram-ws-20-ss-2_samples.0.jsonl'
+    # run_RepoCoder_method(CONSTANTS.api_benchmark, repos, window_sizes, slice_sizes, prediction_path)
