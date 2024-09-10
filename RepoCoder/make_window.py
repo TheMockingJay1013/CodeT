@@ -14,7 +14,8 @@ class RepoWindowMaker:
         self.slice_size = slice_size
         self.slice_step = 1 if window_size // slice_size == 0 else window_size // slice_size
         self.source_code_files = Tools.iterate_repository(repo)
-        
+        # print("Repo is ",repo)
+
     def _buid_windows_for_a_file(self, fpath_tuple, code):
         code_windows = []
         code_lines = code.splitlines()
@@ -39,7 +40,7 @@ class RepoWindowMaker:
                 }
             })
         return code_windows
-    
+
     def _merge_windows_with_same_context(self, code_windows):
         merged_code_windows = defaultdict(list)
         for code_window in code_windows:
@@ -72,7 +73,7 @@ class BaselineWindowMaker:
         self.window_size = window_size
         self.tasks = tasks
         self.source_code = Tools.iterate_repository(repo)
-    
+
     def build_window(self):
         code_windows = []
         for task in self.tasks:
@@ -138,7 +139,7 @@ class GroundTruthWindowMaker:
                 }
             })
         print(f'build {len(code_windows)} ground truth windows for {self.repo} with window size {self.window_size}')
-        output_path = FilePathBuilder.search_first_window_path(self.benchmark, CONSTANTS.rg, self.repo, self.window_size)
+        output_path = FilePathBuilder.search_first_window_path(self.benchmark, CONSTANTS.gt, self.repo, self.window_size)
         Tools.dump_pickle(code_windows, output_path)
 
 class PredictionWindowMaker:
@@ -149,7 +150,7 @@ class PredictionWindowMaker:
         self.source_code = Tools.iterate_repository(repo)
         self.predictions = Tools.load_jsonl(prediction_path)
         self.window_path_builder = window_path_builder
-    
+
     def build_window(self, type='centered'):
         code_windows = []
         delta_size = self.window_size // 2
