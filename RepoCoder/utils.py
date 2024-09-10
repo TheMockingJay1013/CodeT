@@ -5,6 +5,8 @@ import os
 import glob
 import pickle
 import json
+
+from networkx.algorithms.centrality.degree_alg import out_degree_centrality
 import tiktoken
 from transformers import AutoTokenizer
 
@@ -20,11 +22,11 @@ class CONSTANTS:
     rgrg = 'r-g-r-g' # RepoCoder, two-stage retrieval and generation
 
 class FilePathBuilder:
-    api_completion_benchmark = 'datasets/random-api-completion.test.jsonl'
-    random_line_completion_benchmark = 'datasets/random-line-completion.test.jsonl'
+    api_completion_benchmark = 'datasets/api_level_completion_2k_context_codex.test.jsonl'
+    random_line_completion_benchmark = 'datasets/line_level_completion_2k_context_codex.test.jsonl'
     # short version for codegen
-    short_api_completion_benchmark = 'datasets/random-api-completion-short-version.test.jsonl'
-    short_random_line_completion_benchmark = 'datasets/random-line-completion-short-version.test.jsonl'
+    short_api_completion_benchmark = 'datasets/api_level_completion_1k_context_codegen.test.jsonl'
+    short_random_line_completion_benchmark = 'datasets/line_level_completion_1k_context_codegen.test.jsonl'
     repo_base_dir = 'repositories/line_and_api_level'
 
     @staticmethod
@@ -39,7 +41,7 @@ class FilePathBuilder:
         FilePathBuilder.make_needed_dir(out_path)
         return out_path
 
-    
+
     @staticmethod
     def search_first_window_path(benchmark, mode, repo, window_size):
         # mode includes gt and s-g
@@ -85,7 +87,7 @@ class FilePathBuilder:
 class CodexTokenizer:
     def __init__(self):
         self.tokenizer = tiktoken.get_encoding("p50k_base")
-    
+
     def tokenize(self, text):
         # return self.tokenizer.encode(text)
         return self.tokenizer.encode_ordinary(text)
@@ -108,28 +110,31 @@ class Tools:
     def read_code(fname):
         with open(fname, 'r', encoding='utf8') as f:
             return f.read()
-    
+
     @staticmethod
     def load_pickle(fname):
         with open(fname, 'rb') as f:
             return pickle.load(f)
-    
+
     @staticmethod
     def dump_pickle(obj, fname):
+        os.makedirs(os.path.dirname(fname), exist_ok=True)
         with open(fname, 'wb') as f:
             pickle.dump(obj, f)
-    
+
     @staticmethod
     def dump_json(obj, fname):
+        os.makedirs(os.path.dirname(fname), exist_ok=True)
         with open(fname, 'w', encoding='utf8') as f:
             json.dump(obj, f)
 
     @staticmethod
     def dump_jsonl(obj, fname):
+        os.makedirs(os.path.dirname(fname), exist_ok=True)
         with open(fname, 'w', encoding='utf8') as f:
             for item in obj:
                 f.write(json.dumps(item) + '\n')
-    
+
     @staticmethod
     def load_jsonl(fname):
         with open(fname, 'r', encoding='utf8') as f:
@@ -137,7 +142,7 @@ class Tools:
             for line in f:
                 lines.append(json.loads(line))
             return lines
-    
+
     @staticmethod
     def iterate_repository(repo):
         base_dir = FilePathBuilder.repo_base_dir
